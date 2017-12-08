@@ -10,7 +10,7 @@ def basis_to_triangle_map(V: 'np.ndarray[float]', T: 'np.ndarray[int]', E: list)
     basis_mapping = {}
     basis_counter = 0
     # value and gradient interpolation
-    for v in range(V):
+    for v in range(len(V)):
         I = incident_triangles(v, T)
         basis_mapping[basis_counter] = I
         basis_mapping[basis_counter + len(V)] = I
@@ -43,12 +43,12 @@ def local2global(V: 'np.ndarray[float]', T: 'np.ndarray[int]', E: list) -> dict:
 
     # assign a global index to each edge
     for i, e in enumerate(E):
-        edge_idx[e] = 3*N + 1
+        edge_idx[e] = 3*N + i
 
     # assign a global index to each vertex, corresponding to evaluation and gradient
     for i in range(len(T)):
         v1, v2, v3 = T[i]
-        e1, e2, e3 = get_edge(T[i])
+        e1, e2, e3 = get_one_edge(T[i])
         e1, e2, e3 = edge_idx[e1], edge_idx[e2], edge_idx[e3]
         l2g[i] = [v1, v1 + N, v1 + 2*N, e1,\
                   v2, v2 + N, v2 + 2*N, e2,\
@@ -105,6 +105,6 @@ def get_all_edges(T: 'np.ndarray[int]') -> list:
     :return: list of all edges
     '''
     E = []
-    for T in triangulation:
-        E += get_edge(T)
+    for t in T:
+        E += get_one_edge(t)
     return list(set(E))
