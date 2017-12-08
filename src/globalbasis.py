@@ -1,6 +1,12 @@
 import numpy as np
 from helper_functions import basis_to_triangle_map, local2global, get_all_edges
 from SSplines.src.splinespace import SplineSpace
+from SSplines.src.triangle_functions import sample_triangle_uniform
+
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+
+import scipy.spatial as sp
 
 class GlobalBasisFunction(object):
 
@@ -43,12 +49,19 @@ class GlobalSplineSpace(object):
             B = S.basis(type='H')[self.global_to_local_map[i][triangle_id]]
             local_basis_repr[triangle_id] = B
 
+
+        # if the global basis function is defined over an internal edge, then
+        # flip the sign of one of the local basis functions to preserve continuity
+        if i >= 3*len(V) and len(triangles_with_support) == 2:
+            local_basis_repr[triangle_id] = B*-1
+
         def globalbasis(x, k):
             # if x lies in a supported triangle, evaluate
             if k in triangles_with_support:
                 return local_basis_repr[k](x)
+            # else, return 0
             else:
-                return 0
+                return np.zeros(len(x))
 
         return globalbasis
 
@@ -79,10 +92,18 @@ if __name__ == "__main__":
         [1, 1],
         [0, 1]
     ])
-    T = np.array([
-        [0, 1, 3],
-        [1, 2, 3]
-    ])
+    T = sp.Delaunay(V).simplices
 
     G = GlobalSplineSpace(V, T)
+    points = [sample_triangle_uniform(V[T[i]], 25) for i in range(len(T))]
+    tris = [sp.Delaunay(p) for p in points]
+    for i, b in enumerate(G.global_basis):
+        fig = plt.figure()
+        axs = Axes3D(fig)
+        axs.set_zlim3d(0, 1)
+        for t in range(len(T)):
+            z = b(points[t], t)
+            axs.plot_trisurf(points[t][:, 0], points[t][:, 1], z, triangles=tris[t].simplices)
+        plt.title('$\\varphi_{%d}$' % i)
+        plt.show()
 
