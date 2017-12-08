@@ -1,4 +1,4 @@
-def construct_basis_mapping(V: 'np.ndarray[float]', T: 'np.ndarray[int]', E: list):
+def basis_to_triangle_map(V: 'np.ndarray[float]', T: 'np.ndarray[int]', E: list):
     """
     Given a connectivity matrix T, a set of vertices V, and a set of edges E,
     returns a dictionary mapping global basis number to the set of triangles it
