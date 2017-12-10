@@ -1,3 +1,5 @@
+from collections import Counter
+
 def basis_to_triangle_map(V: 'np.ndarray[float]', T: 'np.ndarray[int]', E: list):
     """
     Given a connectivity matrix T, a set of vertices V, and a set of edges E,
@@ -29,7 +31,8 @@ def local2global(V: 'np.ndarray[float]', T: 'np.ndarray[int]', E: list) -> dict:
     '''
     Given a set of matrices, a connectivity matrix T, and a set of edges E,
     computes a local 2 global map that for each triangle maps a local node
-    index to a global node index - twelve per triangle.
+    index to a global node index - twelve per triangle. Also returns an edge to
+    global-node map.
     :param V: vertices
     :param T: connectivity matrix
     :param E: edges
@@ -54,7 +57,7 @@ def local2global(V: 'np.ndarray[float]', T: 'np.ndarray[int]', E: list) -> dict:
                   v2, v2 + N, v2 + 2*N, e2,\
                   v3, v3 + N, v3 + 2*N, e3]
 
-    return l2g
+    return l2g, edge_idx
 
 
 def incident_triangles(v: int, T: 'np.ndarray[int]') -> list:
@@ -99,12 +102,16 @@ def get_one_edge(t: 'np.ndarray[int]') -> list:
 
 def get_all_edges(T: 'np.ndarray[int]') -> list:
     '''
-    Given a connectivity matrix T, returns a list of all the edges in the
-    triangulation.
+    Given a connectivity matrix T, returns two lists of all the edges in the
+    triangulation, interior and boundary edges respectively
     :param T: connectivity matrix
     :return: list of all edges
     '''
     E = []
     for t in T:
         E += get_one_edge(t)
-    return list(set(E))
+    counted = dict(Counter(E))
+    bnd_edges = [e for e in counted if counted[e] == 1]
+    int_edges = [e for e in counted if counted[e] > 1]
+
+    return list(set(int_edges)), list(set(bnd_edges))
